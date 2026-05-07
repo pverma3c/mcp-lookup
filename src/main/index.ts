@@ -13,10 +13,12 @@ import { registerUpdaterIpc } from './updater'
 
 installBackendLogCapture()
 
-// Linux: skip the setuid sandbox helper so dev launches don't require
-// chowning node_modules/electron/dist/chrome-sandbox to root after each install.
+// Linux: skip the setuid sandbox helper. Without `disable-setuid-sandbox`,
+// Chromium aborts on Ubuntu 24.04+ where AppArmor restricts unprivileged user
+// namespaces — the helper check fires before `--no-sandbox` is processed.
 if (process.platform === 'linux') {
   app.commandLine.appendSwitch('no-sandbox')
+  app.commandLine.appendSwitch('disable-setuid-sandbox')
 }
 
 function createWindow(): void {
