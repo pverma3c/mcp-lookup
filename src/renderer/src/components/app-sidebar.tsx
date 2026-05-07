@@ -28,7 +28,7 @@ export function AppSidebar(): React.JSX.Element {
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2.5 px-2 py-1.5">
-          <McpBrandLogo className="size-8 shrink-0" />
+          <McpBrandLogo className="size-10 shrink-0" />
           <div className="flex min-w-0 flex-col leading-tight group-data-[collapsible=icon]:hidden">
             <span className="truncate text-sm font-semibold">mcp-lookup</span>
             <span className="truncate text-[10px] text-muted-foreground">

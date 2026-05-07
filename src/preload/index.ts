@@ -97,6 +97,19 @@ const chatApi = {
   }
 }
 
+const updateApi = {
+  getState: () => ipcRenderer.invoke('update:get-state'),
+  check: () => ipcRenderer.invoke('update:check'),
+  download: () => ipcRenderer.invoke('update:download'),
+  install: () => ipcRenderer.invoke('update:install'),
+  openRelease: () => ipcRenderer.invoke('update:open-release'),
+  onState: (cb: (state: unknown) => void) => {
+    const handler = (_e: IpcRendererEvent, s: unknown): void => cb(s)
+    ipcRenderer.on('update:state', handler)
+    return () => ipcRenderer.off('update:state', handler)
+  }
+}
+
 const windowApi = {
   minimize: () => ipcRenderer.invoke('window:minimize'),
   maximizeToggle: () => ipcRenderer.invoke('window:maximize-toggle'),
@@ -113,7 +126,8 @@ const api = {
   mcp: mcpApi,
   llm: llmApi,
   chat: chatApi,
-  win: windowApi
+  win: windowApi,
+  update: updateApi
 }
 
 if (process.contextIsolated) {

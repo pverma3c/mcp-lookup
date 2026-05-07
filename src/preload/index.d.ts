@@ -14,6 +14,7 @@ import type {
   UpdateProviderInput
 } from '../renderer/src/lib/llm-types'
 import type { ChatEvent, SendChatRequest, ServerSummary } from '../renderer/src/lib/chat-types'
+import type { UpdateState } from '../renderer/src/lib/update-types'
 
 interface McpApi {
   list: () => Promise<ServerView[]>
@@ -58,9 +59,24 @@ interface WindowApi {
   onMaximizedChange: (cb: (isMaximized: boolean) => void) => () => void
 }
 
+interface UpdateApi {
+  getState: () => Promise<UpdateState>
+  check: () => Promise<UpdateState>
+  download: () => Promise<UpdateState>
+  install: () => Promise<UpdateState>
+  openRelease: () => Promise<void>
+  onState: (cb: (state: UpdateState) => void) => () => void
+}
+
 declare global {
   interface Window {
     electron: ElectronAPI
-    api: { mcp: McpApi; llm: LlmApi; chat: ChatApi; win: WindowApi }
+    api: {
+      mcp: McpApi
+      llm: LlmApi
+      chat: ChatApi
+      win: WindowApi
+      update: UpdateApi
+    }
   }
 }

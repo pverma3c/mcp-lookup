@@ -3,6 +3,7 @@ import { Maximize2, Minus, X } from 'lucide-react'
 import { LogSheet } from '@/components/log-sheet'
 import { Matrix, loader, pulse, snake, wave } from '@/components/ui/matrix'
 import type { Frame } from '@/components/ui/matrix'
+import { UpdateIndicator } from '@/components/update-indicator'
 
 const ROWS = 7
 const COLS = 7
@@ -72,6 +73,13 @@ export function TitleBar(): React.JSX.Element {
             />
           ))}
         </button>
+
+        <div
+          className="flex items-center border-r px-2"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+        >
+          <UpdateIndicator />
+        </div>
 
         <div className="flex flex-1 items-center justify-center text-xs font-medium text-muted-foreground/80">
           mcp-lookup

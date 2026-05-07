@@ -9,6 +9,7 @@ import { registerChatIpc } from './chat/ipc'
 import { registerLlmIpc } from './llm/ipc'
 import { registerMcpIpc } from './mcp/ipc'
 import { mcpManager } from './mcp/manager'
+import { registerUpdaterIpc } from './updater'
 
 installBackendLogCapture()
 
@@ -85,6 +86,7 @@ app.whenReady().then(() => {
   registerMcpIpc()
   registerLlmIpc()
   registerChatIpc()
+  registerUpdaterIpc()
 
   ipcMain.handle('window:minimize', (e) => {
     BrowserWindow.fromWebContents(e.sender)?.minimize()

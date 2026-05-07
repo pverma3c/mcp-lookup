@@ -5,6 +5,7 @@ import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { nanoid } from 'nanoid'
 import { ServerStore } from './store'
+import { buildSpawnEnv, preflightNodeCommand } from './runtime-env'
 import type {
   AddServerInput,
   Capabilities,
@@ -291,10 +292,13 @@ export class McpManager extends EventEmitter {
   > {
     const c = cfg.config
     if (c.transport === 'stdio') {
+      const env = buildSpawnEnv(c.env ?? {})
+      const preflightError = preflightNodeCommand(c.command, env)
+      if (preflightError) throw new Error(preflightError)
       return new StdioClientTransport({
         command: c.command,
         args: c.args,
-        env: { ...(process.env as Record<string, string>), ...c.env },
+        env,
         cwd: c.cwd && c.cwd.trim() ? c.cwd : undefined,
         stderr: 'pipe'
       })
