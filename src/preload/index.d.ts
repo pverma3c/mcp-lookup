@@ -23,6 +23,12 @@ interface McpApi {
   remove: (id: string) => Promise<void>
   connect: (id: string) => Promise<ServerView | null>
   disconnect: (id: string) => Promise<void>
+  cancelConnect: (id: string) => Promise<void>
+  callTool: (
+    serverId: string,
+    toolName: string,
+    args: Record<string, unknown>
+  ) => Promise<{ result: unknown; latencyMs: number }>
   toggleTool: (id: string, toolName: string, disabled: boolean) => Promise<ServerView | null>
   setAllTools: (id: string, disabled: boolean) => Promise<ServerView | null>
   getLogs: (id: string) => Promise<LogLine[]>
@@ -38,6 +44,7 @@ interface LlmApi {
   add: (input: ProviderInput) => Promise<Provider>
   update: (input: UpdateProviderInput) => Promise<Provider>
   remove: (id: string) => Promise<void>
+  setEnabled: (id: string, enabled: boolean) => Promise<Provider | null>
   test: (req: TestRequest) => Promise<TestResult>
   listModels: (req: TestRequest) => Promise<ListModelsResult>
   onProviderUpdated: (cb: (provider: Provider) => void) => () => void

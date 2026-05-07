@@ -1,26 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Maximize2, Minus, X } from 'lucide-react'
+import { Maximize2, Minus, ScrollText, X } from 'lucide-react'
 import { LogSheet } from '@/components/log-sheet'
-import { Matrix, loader, pulse, snake, wave } from '@/components/ui/matrix'
-import type { Frame } from '@/components/ui/matrix'
+import { cn } from '@/lib/utils'
 import { UpdateIndicator } from '@/components/update-indicator'
-
-const ROWS = 7
-const COLS = 7
-const EMPTY_PATTERN: Frame = Array.from({ length: ROWS }, () => Array(COLS).fill(0))
-
-const ANIMATIONS = [
-  { name: 'wave', frames: wave, fps: 20 },
-  { name: 'pulse', frames: pulse, fps: 14 },
-  { name: 'snake', frames: snake, fps: 24 },
-  { name: 'loader', frames: loader, fps: 18 }
-] as const
 
 export function TitleBar(): React.JSX.Element {
   const [maximized, setMaximized] = useState(false)
   const [logsOpen, setLogsOpen] = useState(false)
-  const [hasLogs, setHasLogs] = useState(false)
+  const [logCount, setLogCount] = useState(0)
   const [pulsing, setPulsing] = useState(false)
+  const hasLogs = logCount > 0
 
   useEffect(() => {
     void window.api.win.isMaximized().then(setMaximized)
@@ -30,16 +19,19 @@ export function TitleBar(): React.JSX.Element {
   useEffect(() => {
     let active = true
     void window.api.mcp.getAllLogs().then((lines) => {
-      if (active) setHasLogs(lines.length > 0)
+      if (active) setLogCount(lines.length)
     })
     const off = window.api.mcp.onServerLog(() => {
-      setHasLogs(true)
+      setLogCount((n) => n + 1)
       setPulsing(true)
       window.setTimeout(() => setPulsing(false), 1200)
     })
+    const onCleared = (): void => setLogCount(0)
+    window.addEventListener('mcp:logs-cleared', onCleared)
     return () => {
       active = false
       off()
+      window.removeEventListener('mcp:logs-cleared', onCleared)
     }
   }, [])
 
@@ -53,25 +45,31 @@ export function TitleBar(): React.JSX.Element {
           type="button"
           onClick={() => setLogsOpen(true)}
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-          className="flex w-[10%] min-w-[120px] cursor-pointer items-center justify-center gap-1.5 overflow-hidden border-r px-2 py-1 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+          className={cn(
+            'group/logs flex w-fit cursor-pointer items-center gap-1.5 border-r px-3 py-1 text-[11px] font-light tracking-wide transition-colors hover:bg-muted/40 hover:text-foreground',
+            hasLogs ? 'text-foreground/80' : 'text-muted-foreground/60'
+          )}
           aria-label={hasLogs ? 'View logs' : 'No logs yet'}
         >
-          {ANIMATIONS.map((a) => (
-            <Matrix
-              key={a.name}
-              rows={ROWS}
-              cols={COLS}
-              frames={hasLogs ? a.frames : undefined}
-              pattern={hasLogs ? undefined : EMPTY_PATTERN}
-              fps={pulsing ? a.fps + 6 : a.fps}
-              autoplay={hasLogs}
-              loop
-              palette={{ on: 'currentColor', off: 'currentColor' }}
-              brightness={hasLogs ? 1 : 0.4}
-              ariaLabel={`${a.name} animation`}
-              className="block h-full shrink-0 [&_svg]:h-full [&_svg]:w-auto"
+          <ScrollText
+            className={cn(
+              'size-3.5 shrink-0 transition-transform',
+              pulsing && 'animate-pulse'
+            )}
+            strokeWidth={1.5}
+          />
+          <span className="truncate">logs</span>
+          {hasLogs && (
+            <span className="text-[10px] tabular-nums text-muted-foreground/60">
+              {logCount}
+            </span>
+          )}
+          {pulsing && (
+            <span
+              className="size-1.5 shrink-0 rounded-full bg-emerald-500 shadow-[0_0_6px_var(--color-emerald-500)]"
+              aria-hidden
             />
-          ))}
+          )}
         </button>
 
         <div
@@ -82,7 +80,7 @@ export function TitleBar(): React.JSX.Element {
         </div>
 
         <div className="flex flex-1 items-center justify-center text-xs font-medium text-muted-foreground/80">
-          mcp-lookup
+          MCP-Lookup
         </div>
 
         <div
@@ -93,7 +91,7 @@ export function TitleBar(): React.JSX.Element {
             type="button"
             onClick={() => void window.api.win.minimize()}
             aria-label="Minimize"
-            className="flex size-3.5 cursor-pointer items-center justify-center rounded-full bg-blue-500 text-blue-950/70 shadow-inner shadow-blue-900/20 transition-all hover:brightness-110 active:scale-95"
+            className="flex size-3.5 cursor-pointer items-center justify-center rounded-full bg-primary/40 text-primary-foreground shadow-inner shadow-primary/30 transition-all hover:bg-primary/55 hover:brightness-110 active:scale-95"
           >
             <Minus
               strokeWidth={3}
@@ -104,7 +102,7 @@ export function TitleBar(): React.JSX.Element {
             type="button"
             onClick={() => void window.api.win.maximizeToggle()}
             aria-label={maximized ? 'Restore' : 'Maximize'}
-            className="flex size-3.5 cursor-pointer items-center justify-center rounded-full bg-emerald-500 text-emerald-950/70 shadow-inner shadow-emerald-900/20 transition-all hover:brightness-110 active:scale-95"
+            className="flex size-3.5 cursor-pointer items-center justify-center rounded-full bg-primary/70 text-primary-foreground shadow-inner shadow-primary/30 transition-all hover:bg-primary/85 hover:brightness-110 active:scale-95"
           >
             <Maximize2
               strokeWidth={2.5}
@@ -115,7 +113,7 @@ export function TitleBar(): React.JSX.Element {
             type="button"
             onClick={() => void window.api.win.close()}
             aria-label="Close"
-            className="flex size-3.5 cursor-pointer items-center justify-center rounded-full bg-red-500 text-red-950/70 shadow-inner shadow-red-900/20 transition-all hover:brightness-110 active:scale-95"
+            className="flex size-3.5 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-inner shadow-primary/30 transition-all hover:brightness-110 active:scale-95"
           >
             <X
               strokeWidth={2.5}

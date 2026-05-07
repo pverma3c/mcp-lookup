@@ -13,6 +13,8 @@ import {
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
+import { cn } from '@/lib/utils'
 import {
   Card,
   CardAction,
@@ -94,11 +96,26 @@ export function ProviderCard({ provider, onEdit }: Props): React.JSX.Element {
     }
   }
 
+  const handleToggleEnabled = async (enabled: boolean): Promise<void> => {
+    await window.api.llm.setEnabled(provider.id, enabled)
+    toast.success(`${provider.name} ${enabled ? 'enabled' : 'disabled'}`)
+  }
+
   return (
-    <Card className="h-full gap-4 py-5 transition-colors hover:border-foreground/20">
+    <Card
+      className={cn(
+        'h-full gap-4 py-5 transition-all hover:border-foreground/20',
+        provider.disabled && 'opacity-60'
+      )}
+    >
       <CardHeader>
         <CardTitle className="flex min-w-0 items-center gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+          <span
+            className={cn(
+              'flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted',
+              provider.disabled && 'grayscale'
+            )}
+          >
             <Icon className={`size-4 ${tint}`} />
           </span>
           <span className="truncate">{provider.name}</span>
@@ -106,7 +123,13 @@ export function ProviderCard({ provider, onEdit }: Props): React.JSX.Element {
         <CardDescription className="truncate pl-12 font-mono text-xs">
           {summary(provider)}
         </CardDescription>
-        <CardAction>
+        <CardAction className="flex items-center gap-2">
+          <Switch
+            checked={!provider.disabled}
+            onCheckedChange={handleToggleEnabled}
+            aria-label={provider.disabled ? 'Enable provider' : 'Disable provider'}
+            title={provider.disabled ? 'Enable' : 'Disable'}
+          />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon-sm" aria-label="More">
@@ -114,7 +137,10 @@ export function ProviderCard({ provider, onEdit }: Props): React.JSX.Element {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={handleTest}>
+              <DropdownMenuItem
+                onSelect={handleTest}
+                disabled={provider.disabled}
+              >
                 <PlugZap /> Test connection
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={onEdit}>
@@ -138,6 +164,11 @@ export function ProviderCard({ provider, onEdit }: Props): React.JSX.Element {
           <Badge variant={provider.hasApiKey ? 'secondary' : 'outline'} className="gap-1">
             <KeyRound className="size-3" />
             {provider.hasApiKey ? 'Key set' : 'No key'}
+          </Badge>
+        )}
+        {provider.disabled && (
+          <Badge variant="outline" className="border-dashed text-muted-foreground">
+            Disabled
           </Badge>
         )}
       </CardContent>

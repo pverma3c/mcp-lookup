@@ -50,6 +50,18 @@ export function AppBreadcrumb(): React.JSX.Element | null {
     )
   }
 
+  if (location.pathname === '/playground') {
+    return (
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbPage>Playground</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+    )
+  }
+
   if (serverMatch) {
     const id = serverMatch.params.id
     const server = servers.find((s) => s.id === id)

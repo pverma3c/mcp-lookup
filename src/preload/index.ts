@@ -8,6 +8,8 @@ const MCP_CHANNELS = {
   remove: 'mcp:remove',
   connect: 'mcp:connect',
   disconnect: 'mcp:disconnect',
+  cancelConnect: 'mcp:cancel-connect',
+  callTool: 'mcp:call-tool',
   toggleTool: 'mcp:toggle-tool',
   setAllTools: 'mcp:set-all-tools',
   getLogs: 'mcp:get-logs',
@@ -30,6 +32,7 @@ const LLM_CHANNELS = {
   add: 'llm:add',
   update: 'llm:update',
   remove: 'llm:remove',
+  setEnabled: 'llm:set-enabled',
   test: 'llm:test',
   listModels: 'llm:list-models',
   providerUpdated: 'llm:provider-updated',
@@ -43,6 +46,9 @@ const mcpApi = {
   remove: (id: string) => ipcRenderer.invoke(MCP_CHANNELS.remove, id),
   connect: (id: string) => ipcRenderer.invoke(MCP_CHANNELS.connect, id),
   disconnect: (id: string) => ipcRenderer.invoke(MCP_CHANNELS.disconnect, id),
+  cancelConnect: (id: string) => ipcRenderer.invoke(MCP_CHANNELS.cancelConnect, id),
+  callTool: (serverId: string, toolName: string, args: Record<string, unknown>) =>
+    ipcRenderer.invoke(MCP_CHANNELS.callTool, serverId, toolName, args),
   toggleTool: (id: string, toolName: string, disabled: boolean) =>
     ipcRenderer.invoke(MCP_CHANNELS.toggleTool, id, toolName, disabled),
   setAllTools: (id: string, disabled: boolean) =>
@@ -72,6 +78,8 @@ const llmApi = {
   add: (input: unknown) => ipcRenderer.invoke(LLM_CHANNELS.add, input),
   update: (input: unknown) => ipcRenderer.invoke(LLM_CHANNELS.update, input),
   remove: (id: string) => ipcRenderer.invoke(LLM_CHANNELS.remove, id),
+  setEnabled: (id: string, enabled: boolean) =>
+    ipcRenderer.invoke(LLM_CHANNELS.setEnabled, id, enabled),
   test: (req: unknown) => ipcRenderer.invoke(LLM_CHANNELS.test, req),
   listModels: (req: unknown) => ipcRenderer.invoke(LLM_CHANNELS.listModels, req),
   onProviderUpdated: (cb: (p: unknown) => void) => {

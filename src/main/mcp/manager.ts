@@ -24,6 +24,15 @@ interface Connection {
   client: Client
 }
 
+interface PendingConnect {
+  transport: InstanceType<
+    | typeof StdioClientTransport
+    | typeof StreamableHTTPClientTransport
+    | typeof SSEClientTransport
+  >
+  cancelled: boolean
+}
+
 const APP_INFO = { name: 'mcp-lookup', version: '1.0.0' }
 
 function emptyRuntime(id: string): ServerRuntime {
@@ -39,6 +48,7 @@ function emptyRuntime(id: string): ServerRuntime {
 
 export class McpManager extends EventEmitter {
   private connections = new Map<string, Connection>()
+  private pending = new Map<string, PendingConnect>()
   private runtimes = new Map<string, ServerRuntime>()
   private logs = new Map<string, LogLine[]>()
 
@@ -130,11 +140,15 @@ export class McpManager extends EventEmitter {
     const cfg = ServerStore.get(id)
     if (!cfg) return null
     if (this.connections.has(id)) return this.viewOf(cfg)
+    if (this.pending.has(id)) return this.viewOf(cfg)
 
     this.setStatus(id, 'connecting')
     this.appendLog(id, 'system', this.describeConnect(cfg))
+    let pending: PendingConnect | null = null
     try {
       const transport = this.buildTransport(cfg)
+      pending = { transport, cancelled: false }
+      this.pending.set(id, pending)
       if (cfg.config.transport === 'stdio' && transport instanceof StdioClientTransport) {
         const stderr = transport.stderr
         if (stderr) {
@@ -145,6 +159,15 @@ export class McpManager extends EventEmitter {
       }
       const client = new Client(APP_INFO, { capabilities: {} })
       await client.connect(transport)
+      if (pending.cancelled) {
+        try {
+          await client.close()
+        } catch {
+          /* ignore */
+        }
+        throw new Error('__cancelled__')
+      }
+      this.pending.delete(id)
       this.connections.set(id, { client })
       this.appendLog(id, 'system', 'Connected.')
 
@@ -198,6 +221,15 @@ export class McpManager extends EventEmitter {
       this.emit('updated', view)
       return view
     } catch (err) {
+      const wasCancelled = pending?.cancelled === true
+      this.pending.delete(id)
+      this.connections.delete(id)
+      if (wasCancelled) {
+        this.appendLog(id, 'system', 'Connect cancelled.')
+        this.runtimes.set(id, emptyRuntime(id))
+        this.emit('updated', this.viewOf(cfg))
+        return this.viewOf(cfg)
+      }
       const message = err instanceof Error ? err.message : String(err)
       this.appendLog(id, 'system', `Failed to connect: ${message}`)
       const cause = (err as { cause?: unknown }).cause
@@ -211,10 +243,32 @@ export class McpManager extends EventEmitter {
         this.appendLog(id, 'system', trimmed)
       }
       this.runtimes.set(id, { ...emptyRuntime(id), status: 'error', error: message })
-      this.connections.delete(id)
       this.emit('updated', this.viewOf(cfg))
       return this.viewOf(cfg)
     }
+  }
+
+  async cancelConnect(id: string): Promise<void> {
+    const pending = this.pending.get(id)
+    if (!pending) return
+    pending.cancelled = true
+    try {
+      await pending.transport.close()
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async callTool(
+    serverId: string,
+    toolName: string,
+    args: Record<string, unknown>
+  ): Promise<{ result: unknown; latencyMs: number }> {
+    const conn = this.connections.get(serverId)
+    if (!conn) throw new Error('Server is not connected')
+    const start = Date.now()
+    const result = await conn.client.callTool({ name: toolName, arguments: args })
+    return { result, latencyMs: Date.now() - start }
   }
 
   private describeConnect(cfg: ServerConfig): string {

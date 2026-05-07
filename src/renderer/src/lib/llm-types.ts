@@ -30,6 +30,7 @@ export interface Provider {
   name: string
   config: ProviderConfig
   hasApiKey: boolean
+  disabled: boolean
 }
 
 export interface ProviderInput {

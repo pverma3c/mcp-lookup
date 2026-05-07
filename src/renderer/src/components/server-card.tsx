@@ -9,7 +9,8 @@ import {
   SquareLibrary,
   TriangleAlert,
   Trash2,
-  Pencil
+  Pencil,
+  X
 } from 'lucide-react'
 import { McpLogo } from '@/components/mcp-logo'
 import { toast } from 'sonner'
@@ -79,7 +80,9 @@ export function ServerCard({ server, onEdit }: Props): React.JSX.Element {
   const handleConnect = async (e: React.MouseEvent): Promise<void> => {
     e.preventDefault()
     e.stopPropagation()
-    if (status === 'connected') {
+    if (status === 'connecting') {
+      await window.api.mcp.cancelConnect(server.id)
+    } else if (status === 'connected') {
       await window.api.mcp.disconnect(server.id)
       toast.success(`Disconnected ${server.name}`)
     } else {
@@ -92,6 +95,8 @@ export function ServerCard({ server, onEdit }: Props): React.JSX.Element {
     await window.api.mcp.remove(server.id)
     toast.success('Server deleted')
   }
+
+  const isConnecting = status === 'connecting'
 
   return (
     <Link
@@ -133,11 +138,16 @@ export function ServerCard({ server, onEdit }: Props): React.JSX.Element {
               >
                 <DropdownMenuItem
                   onSelect={() => {
-                    if (status === 'connected') void window.api.mcp.disconnect(server.id)
+                    if (status === 'connecting') void window.api.mcp.cancelConnect(server.id)
+                    else if (status === 'connected') void window.api.mcp.disconnect(server.id)
                     else void window.api.mcp.connect(server.id)
                   }}
                 >
-                  {status === 'connected' ? (
+                  {status === 'connecting' ? (
+                    <>
+                      <X /> Cancel
+                    </>
+                  ) : status === 'connected' ? (
                     <>
                       <Power /> Disconnect
                     </>
@@ -147,11 +157,15 @@ export function ServerCard({ server, onEdit }: Props): React.JSX.Element {
                     </>
                   )}
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={onEdit}>
+                <DropdownMenuItem onSelect={onEdit} disabled={isConnecting}>
                   <Pencil /> Edit
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onSelect={handleDelete}>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onSelect={handleDelete}
+                  disabled={isConnecting}
+                >
                   <Trash2 /> Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -193,14 +207,19 @@ export function ServerCard({ server, onEdit }: Props): React.JSX.Element {
             <span>{STATUS_LABEL[status]}</span>
           </div>
           <Button
-            variant={status === 'connected' ? 'outline' : 'default'}
+            variant={
+              status === 'connecting'
+                ? 'destructive'
+                : status === 'connected'
+                  ? 'outline'
+                  : 'default'
+            }
             size="sm"
             onClick={handleConnect}
-            disabled={status === 'connecting'}
           >
             {status === 'connecting' ? (
               <>
-                <Loader2 className="animate-spin" /> Connecting
+                <Loader2 className="animate-spin" /> Cancel
               </>
             ) : status === 'connected' ? (
               <>

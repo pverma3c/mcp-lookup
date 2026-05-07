@@ -8,7 +8,7 @@ export function McpBrandLogo({
   return (
     <img
       src={logoUrl}
-      alt="mcp-lookup"
+      alt="MCP-Lookup"
       draggable={false}
       className={cn('object-contain', className)}
       {...props}

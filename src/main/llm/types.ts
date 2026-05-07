@@ -30,6 +30,7 @@ export interface Provider {
   name: string
   config: ProviderConfig
   hasApiKey: boolean
+  disabled: boolean
 }
 
 export const LLM_CHANNELS = {
@@ -37,6 +38,7 @@ export const LLM_CHANNELS = {
   add: 'llm:add',
   update: 'llm:update',
   remove: 'llm:remove',
+  setEnabled: 'llm:set-enabled',
   test: 'llm:test',
   listModels: 'llm:list-models',
   providerUpdated: 'llm:provider-updated',

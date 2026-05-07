@@ -291,7 +291,7 @@ export function AddServerDialog({ open, onOpenChange, editing }: Props): React.J
               )}
             </div>
             <DialogDescription>
-              Configure how mcp-lookup connects to this server. Connect later from its card.
+              Configure how MCP-Lookup connects to this server. Connect later from its card.
             </DialogDescription>
           </DialogHeader>
 

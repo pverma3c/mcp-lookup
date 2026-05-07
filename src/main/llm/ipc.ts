@@ -43,6 +43,12 @@ export function registerLlmIpc(): void {
     broadcast(LLM_CHANNELS.providerRemoved, id)
   })
 
+  ipcMain.handle(LLM_CHANNELS.setEnabled, (_e, id: string, enabled: boolean) => {
+    const provider = ProviderStore.setEnabled(id, enabled)
+    if (provider) broadcast(LLM_CHANNELS.providerUpdated, provider)
+    return provider
+  })
+
   ipcMain.handle(LLM_CHANNELS.test, (_e, req: TestRequest) => {
     let key = req.apiKey
     if ((!key || key === '') && req.id) key = ProviderStore.getApiKey(req.id)

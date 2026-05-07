@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { AnimatePresence, motion, LayoutGroup } from 'framer-motion'
 import {
   ArrowLeft,
   FileText,
@@ -88,6 +89,39 @@ function ServerDetail(): React.JSX.Element {
       return a.name.localeCompare(b.name)
     })
   }, [server, toolQuery, searchInDescription])
+
+  // Defer re-sort until the cursor leaves the list, so toggling a switch
+  // doesn't yank the row out from under the user's mouse.
+  const sortFrozenRef = useRef(false)
+  const [displayedTools, setDisplayedTools] = useState<ToolInfo[]>(filteredTools)
+
+  useEffect(() => {
+    setDisplayedTools((prev) => {
+      const incoming = new Map(filteredTools.map((t) => [t.name, t]))
+      if (!sortFrozenRef.current) return filteredTools
+      // Hovering: keep the previous order, but pick up any updated tool fields
+      // and append/remove entries whose membership in `filteredTools` changed.
+      const kept: ToolInfo[] = []
+      const seen = new Set<string>()
+      for (const t of prev) {
+        const next = incoming.get(t.name)
+        if (next) {
+          kept.push(next)
+          seen.add(next.name)
+        }
+      }
+      for (const t of filteredTools) if (!seen.has(t.name)) kept.push(t)
+      return kept
+    })
+  }, [filteredTools])
+
+  const handleListEnter = (): void => {
+    sortFrozenRef.current = true
+  }
+  const handleListLeave = (): void => {
+    sortFrozenRef.current = false
+    setDisplayedTools(filteredTools)
+  }
 
   const defaultTab = useMemo(() => {
     if (!server) return 'tools'
@@ -364,16 +398,34 @@ function ServerDetail(): React.JSX.Element {
                       icon={<Search />}
                       title={`No tools match "${toolQuery}"`}
                     />
-                  ) : toolView === 'row' ? (
-                    <ul className="divide-y rounded-lg border">
-                      {filteredTools.map((tool) => {
+                  ) : (
+                  <AnimatePresence mode="wait" initial={false}>
+                  {toolView === 'row' ? (
+                    <motion.div
+                      key="row"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                    <LayoutGroup id="tools-row">
+                    <ul
+                      className="divide-y rounded-lg border"
+                      onMouseEnter={handleListEnter}
+                      onMouseLeave={handleListLeave}
+                    >
+                      {displayedTools.map((tool) => {
                         const disabled = server.disabledTools.includes(tool.name)
                         return (
-                          <li
+                          <motion.li
                             key={tool.name}
+                            layout
+                            transition={{
+                              layout: { type: 'spring', stiffness: 420, damping: 38 }
+                            }}
+                            animate={{ opacity: disabled ? 0.55 : 1 }}
                             className={cn(
-                              'group flex items-center gap-4 px-4 py-3 transition-colors duration-300 ease-out hover:bg-muted/50',
-                              disabled && 'opacity-60'
+                              'group flex items-center gap-4 px-4 py-3 hover:bg-muted/50'
                             )}
                           >
                             <button
@@ -400,20 +452,38 @@ function ServerDetail(): React.JSX.Element {
                               }
                               aria-label={`Toggle ${tool.name}`}
                             />
-                          </li>
+                          </motion.li>
                         )
                       })}
                     </ul>
+                    </LayoutGroup>
+                    </motion.div>
                   ) : (
-                    <ul className="grid grid-cols-1 overflow-hidden rounded-lg border sm:grid-cols-2 xl:grid-cols-3">
-                      {filteredTools.map((tool) => {
+                    <motion.div
+                      key="grid"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                    <LayoutGroup id="tools-grid">
+                    <ul
+                      className="grid grid-cols-1 overflow-hidden rounded-lg border sm:grid-cols-2 xl:grid-cols-3"
+                      onMouseEnter={handleListEnter}
+                      onMouseLeave={handleListLeave}
+                    >
+                      {displayedTools.map((tool) => {
                         const disabled = server.disabledTools.includes(tool.name)
                         return (
-                          <li
+                          <motion.li
                             key={tool.name}
+                            layout
+                            transition={{
+                              layout: { type: 'spring', stiffness: 420, damping: 38 }
+                            }}
+                            animate={{ opacity: disabled ? 0.55 : 1 }}
                             className={cn(
-                              'group flex flex-col gap-2 border-b border-r p-4 transition-colors duration-300 ease-out hover:bg-muted/50',
-                              disabled && 'opacity-60'
+                              'group flex flex-col gap-2 border-b border-r p-4 hover:bg-muted/50'
                             )}
                           >
                             <div className="flex items-start justify-between gap-3">
@@ -444,10 +514,14 @@ function ServerDetail(): React.JSX.Element {
                                 {tool.description}
                               </button>
                             )}
-                          </li>
+                          </motion.li>
                         )
                       })}
                     </ul>
+                    </LayoutGroup>
+                    </motion.div>
+                  )}
+                  </AnimatePresence>
                   )}
                 </>
               )}

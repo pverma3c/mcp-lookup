@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Eraser } from 'lucide-react'
+import { Check, Copy, Eraser } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useServers } from '@/hooks/use-servers'
@@ -55,13 +56,44 @@ export function LogSheet({ open, onOpenChange }: Props): React.JSX.Element {
   const handleClear = async (): Promise<void> => {
     for (const s of servers) await window.api.mcp.clearLogs(s.id)
     setLines([])
+    window.dispatchEvent(new CustomEvent('mcp:logs-cleared'))
+  }
+
+  const [copied, setCopied] = useState(false)
+  const handleCopy = async (): Promise<void> => {
+    if (lines.length === 0) return
+    const text = lines
+      .map((line) => {
+        const time = new Date(line.timestamp).toISOString()
+        const isBackend = line.source === 'backend'
+        const sourceName = isBackend
+          ? 'app'
+          : serverNameById.get(line.serverId) ?? line.serverId
+        const tag = isBackend
+          ? line.level ?? 'log'
+          : line.source === 'system'
+            ? 'sys'
+            : 'out'
+        return `${time}  ${sourceName.padEnd(20)}  ${tag.padEnd(5)}  ${line.message}`
+      })
+      .join('\n')
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      toast.success(`Copied ${lines.length} lines`)
+      window.setTimeout(() => setCopied(false), 1500)
+    } catch (err) {
+      toast.error('Copy failed', {
+        description: err instanceof Error ? err.message : String(err)
+      })
+    }
   }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="top"
-        className="flex h-screen w-screen flex-col gap-0 p-0 sm:max-w-none"
+        className="flex w-screen flex-col gap-0 p-0 data-[side=top]:h-screen sm:max-w-none"
       >
         <SheetHeader className="flex-row items-center justify-between gap-3 border-b px-6 py-4 pr-16">
           <div className="flex flex-col gap-0.5">
@@ -70,14 +102,25 @@ export function LogSheet({ open, onOpenChange }: Props): React.JSX.Element {
               Aggregated output across all MCP servers · {lines.length} lines
             </p>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClear}
-            disabled={lines.length === 0}
-          >
-            <Eraser /> Clear all
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopy}
+              disabled={lines.length === 0}
+            >
+              {copied ? <Check className="text-emerald-500" /> : <Copy />}
+              {copied ? 'Copied' : 'Copy all'}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClear}
+              disabled={lines.length === 0}
+            >
+              <Eraser /> Clear all
+            </Button>
+          </div>
         </SheetHeader>
 
         <div

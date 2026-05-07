@@ -8,6 +8,7 @@ interface StoredProvider {
   config: ProviderConfig
   apiKey?: string
   apiKeyEncrypted?: boolean
+  disabled?: boolean
 }
 
 interface Schema {
@@ -43,7 +44,8 @@ function toProvider(stored: StoredProvider): Provider {
     id: stored.id,
     name: stored.name,
     config: stored.config,
-    hasApiKey: !!stored.apiKey
+    hasApiKey: !!stored.apiKey,
+    disabled: stored.disabled === true
   }
 }
 
@@ -77,7 +79,8 @@ export const ProviderStore = {
         name: input.name,
         config: input.config,
         apiKey: value,
-        apiKeyEncrypted: encrypted
+        apiKeyEncrypted: encrypted,
+        disabled: existing?.disabled === true
       }
     } else if (input.keepExistingKey && existing?.apiKey) {
       stored = {
@@ -85,16 +88,30 @@ export const ProviderStore = {
         name: input.name,
         config: input.config,
         apiKey: existing.apiKey,
-        apiKeyEncrypted: existing.apiKeyEncrypted
+        apiKeyEncrypted: existing.apiKeyEncrypted,
+        disabled: existing?.disabled === true
       }
     } else {
-      stored = { id: input.id, name: input.name, config: input.config }
+      stored = {
+        id: input.id,
+        name: input.name,
+        config: input.config,
+        disabled: existing?.disabled === true
+      }
     }
 
     if (idx >= 0) list[idx] = stored
     else list.push(stored)
     store.set('providers', list)
     return toProvider(stored)
+  },
+  setEnabled(id: string, enabled: boolean): Provider | null {
+    const list = store.get('providers', [])
+    const idx = list.findIndex((p) => p.id === id)
+    if (idx < 0) return null
+    list[idx] = { ...list[idx], disabled: !enabled }
+    store.set('providers', list)
+    return toProvider(list[idx])
   },
   remove(id: string): void {
     store.set(

@@ -41,7 +41,11 @@ const SUGGESTIONS = [
 ]
 
 function Chat(): React.JSX.Element {
-  const { providers } = useProviders()
+  const { providers: allProviders } = useProviders()
+  const providers = useMemo(
+    () => allProviders.filter((p) => !p.disabled),
+    [allProviders]
+  )
   const { servers } = useServers()
   const { summary } = useServerContext()
   const { messages, running, send, cancel, clear } = useChat()
@@ -54,7 +58,8 @@ function Chat(): React.JSX.Element {
   const stickRef = useRef(true)
 
   useEffect(() => {
-    if (!providerId && providers.length > 0) {
+    const current = providers.find((p) => p.id === providerId)
+    if (!current && providers.length > 0) {
       setProviderId(providers[0].id)
     }
   }, [providers, providerId])
@@ -228,7 +233,7 @@ function Chat(): React.JSX.Element {
                 'shadow-[0_1px_0_0_var(--border),0_10px_32px_-16px_rgb(0_0_0/0.22)]',
                 'hover:border-foreground/20 hover:shadow-[0_1px_0_0_var(--border),0_14px_36px_-16px_rgb(0_0_0/0.28)]',
                 'focus-within:border-ring focus-within:ring-4 focus-within:ring-ring/15',
-                noProvider && 'pointer-events-none opacity-60'
+                noProvider && 'opacity-60'
               )}
             >
               <Textarea
