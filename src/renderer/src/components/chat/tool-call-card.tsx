@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { Beaker, ChevronDown } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { McpLogo } from '@/components/mcp-logo'
 import { cn } from '@/lib/utils'
 import type { AssistantPart } from '@/lib/chat-types'
@@ -46,17 +45,6 @@ export function ToolCallCard({ tool, serverIdByName }: Props): React.JSX.Element
   const outputText = tool.output ?? ''
   const serverId = tool.serverName ? serverIdByName?.get(tool.serverName) : undefined
 
-  const sendToPlayground = (): void => {
-    if (!serverId) return
-    const params = new URLSearchParams({ serverId, tool: tool.toolName })
-    if (tool.args && typeof tool.args === 'object') {
-      params.set('args', JSON.stringify(tool.args))
-    } else if (typeof tool.args === 'string' && tool.args.trim()) {
-      params.set('args', tool.args)
-    }
-    navigate(`/playground?${params.toString()}`)
-  }
-
   return (
     <div
       className={cn(
@@ -97,22 +85,8 @@ export function ToolCallCard({ tool, serverIdByName }: Props): React.JSX.Element
         <div className="divide-y border-t font-mono text-[11px]">
           {argsJson && (
             <section className="px-3 py-2">
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                  Arguments
-                </span>
-                {serverId && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={sendToPlayground}
-                    className="h-6 gap-1 px-2 text-[10px]"
-                    title="Open this call in the Playground with arguments pre-filled"
-                  >
-                    <Beaker className="size-3" /> Test in playground
-                  </Button>
-                )}
+              <div className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                Arguments
               </div>
               <pre className="whitespace-pre-wrap break-all leading-relaxed">{argsJson}</pre>
             </section>

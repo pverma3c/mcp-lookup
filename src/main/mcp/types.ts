@@ -73,7 +73,6 @@ export const MCP_CHANNELS = {
   connect: 'mcp:connect',
   disconnect: 'mcp:disconnect',
   cancelConnect: 'mcp:cancel-connect',
-  callTool: 'mcp:call-tool',
   toggleTool: 'mcp:toggle-tool',
   setAllTools: 'mcp:set-all-tools',
   getLogs: 'mcp:get-logs',

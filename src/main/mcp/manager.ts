@@ -259,18 +259,6 @@ export class McpManager extends EventEmitter {
     }
   }
 
-  async callTool(
-    serverId: string,
-    toolName: string,
-    args: Record<string, unknown>
-  ): Promise<{ result: unknown; latencyMs: number }> {
-    const conn = this.connections.get(serverId)
-    if (!conn) throw new Error('Server is not connected')
-    const start = Date.now()
-    const result = await conn.client.callTool({ name: toolName, arguments: args })
-    return { result, latencyMs: Date.now() - start }
-  }
-
   private describeConnect(cfg: ServerConfig): string {
     const c = cfg.config
     if (c.transport === 'stdio') {

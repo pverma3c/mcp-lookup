@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Beaker, Bot, LayoutDashboard, MessagesSquare } from 'lucide-react'
+import { Bot, LayoutDashboard, MessagesSquare } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { AboutDialog } from '@/components/about-dialog'
 import { McpBrandLogo } from '@/components/mcp-brand-logo'
@@ -20,7 +20,6 @@ import {
 
 const items = [
   { title: 'Dashboard', to: '/', icon: LayoutDashboard },
-  { title: 'Playground', to: '/playground', icon: Beaker },
   { title: 'Chat', to: '/chat', icon: MessagesSquare },
   { title: 'Providers', to: '/providers', icon: Bot }
 ]

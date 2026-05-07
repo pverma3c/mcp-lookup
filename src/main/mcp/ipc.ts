@@ -19,11 +19,6 @@ export function registerMcpIpc(): void {
   ipcMain.handle(MCP_CHANNELS.disconnect, (_e, id: string) => mcpManager.disconnect(id))
   ipcMain.handle(MCP_CHANNELS.cancelConnect, (_e, id: string) => mcpManager.cancelConnect(id))
   ipcMain.handle(
-    MCP_CHANNELS.callTool,
-    (_e, serverId: string, toolName: string, args: Record<string, unknown>) =>
-      mcpManager.callTool(serverId, toolName, args)
-  )
-  ipcMain.handle(
     MCP_CHANNELS.toggleTool,
     (_e, id: string, toolName: string, disabled: boolean) =>
       mcpManager.toggleTool(id, toolName, disabled)

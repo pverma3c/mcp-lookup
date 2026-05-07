@@ -1,39 +1,16 @@
 import { useState } from 'react'
 import { useMatch } from 'react-router-dom'
-import { Loader2, Pencil, Play, PlugZap, Power, X } from 'lucide-react'
+import { Loader2, Pencil, PlugZap, Power, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { AddServerDialog } from '@/components/add-server-dialog'
 import { Button } from '@/components/ui/button'
 import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group'
 import { useServers } from '@/hooks/use-servers'
-import { usePlaygroundActions } from '@/lib/playground-actions'
 
 export function AppHeaderActions(): React.JSX.Element | null {
   const serverMatch = useMatch('/servers/:id')
-  const playgroundMatch = useMatch('/playground')
-  const playground = usePlaygroundActions()
   const { servers } = useServers()
   const [editing, setEditing] = useState(false)
-
-  if (playgroundMatch) {
-    return (
-      <Button
-        size="sm"
-        onClick={() => playground.run?.()}
-        disabled={!playground.canRun || playground.running || !playground.run}
-      >
-        {playground.running ? (
-          <>
-            <Loader2 className="animate-spin" /> Running…
-          </>
-        ) : (
-          <>
-            <Play /> Run
-          </>
-        )}
-      </Button>
-    )
-  }
 
   if (!serverMatch) return null
   const server = servers.find((s) => s.id === serverMatch.params.id)

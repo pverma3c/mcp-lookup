@@ -7,7 +7,6 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/s
 import { Toaster } from '@/components/ui/sonner'
 import Chat from '@/pages/Chat'
 import Dashboard from '@/pages/Dashboard'
-import Playground from '@/pages/Playground'
 import Providers from '@/pages/Providers'
 import ServerDetail from '@/pages/ServerDetail'
 
@@ -30,7 +29,6 @@ function App(): React.JSX.Element {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/chat" element={<Chat />} />
-                <Route path="/playground" element={<Playground />} />
                 <Route path="/providers" element={<Providers />} />
                 <Route path="/servers/:id" element={<ServerDetail />} />
               </Routes>
