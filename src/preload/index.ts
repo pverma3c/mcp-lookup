@@ -9,6 +9,7 @@ const MCP_CHANNELS = {
   connect: 'mcp:connect',
   disconnect: 'mcp:disconnect',
   cancelConnect: 'mcp:cancel-connect',
+  callTool: 'mcp:call-tool',
   toggleTool: 'mcp:toggle-tool',
   setAllTools: 'mcp:set-all-tools',
   getLogs: 'mcp:get-logs',
@@ -46,6 +47,8 @@ const mcpApi = {
   connect: (id: string) => ipcRenderer.invoke(MCP_CHANNELS.connect, id),
   disconnect: (id: string) => ipcRenderer.invoke(MCP_CHANNELS.disconnect, id),
   cancelConnect: (id: string) => ipcRenderer.invoke(MCP_CHANNELS.cancelConnect, id),
+  callTool: (serverId: string, toolName: string, args: Record<string, unknown>) =>
+    ipcRenderer.invoke(MCP_CHANNELS.callTool, serverId, toolName, args),
   toggleTool: (id: string, toolName: string, disabled: boolean) =>
     ipcRenderer.invoke(MCP_CHANNELS.toggleTool, id, toolName, disabled),
   setAllTools: (id: string, disabled: boolean) =>

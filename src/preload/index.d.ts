@@ -24,6 +24,11 @@ interface McpApi {
   connect: (id: string) => Promise<ServerView | null>
   disconnect: (id: string) => Promise<void>
   cancelConnect: (id: string) => Promise<void>
+  callTool: (
+    serverId: string,
+    toolName: string,
+    args: Record<string, unknown>
+  ) => Promise<{ result: unknown; latencyMs: number }>
   toggleTool: (id: string, toolName: string, disabled: boolean) => Promise<ServerView | null>
   setAllTools: (id: string, disabled: boolean) => Promise<ServerView | null>
   getLogs: (id: string) => Promise<LogLine[]>
